@@ -1,0 +1,71 @@
+import NextAuth from "next-auth"
+import { authConfig } from "@/lib/auth.config"
+import { NextResponse } from "next/server"
+import { ratelimit } from "@/lib/redis"
+
+const { auth } = NextAuth(authConfig)
+
+export default auth(async (req) => {
+  const requestId = crypto.randomUUID()
+  const { nextUrl } = req
+  const isLoggedIn = !!req.auth
+  const userRole = req.auth?.user?.role
+  const apiKey = req.headers.get("x-api-key")
+
+  const isApiRoute = nextUrl.pathname.startsWith("/api")
+  const isWebhookRoute = nextUrl.pathname.startsWith("/api/webhooks")
+  const isAuthRoute = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register")
+  const isDashboardRoute = nextUrl.pathname.startsWith("/dashboard")
+  const isAdminRoute = nextUrl.pathname.startsWith("/dashboard/admin")
+
+  // 1. Skip auth for webhooks
+  if (isWebhookRoute) {
+    const res = NextResponse.next()
+    res.headers.set("x-request-id", requestId)
+    return res
+  }
+
+  // 2. Handle API Authentication (Session OR API Key)
+  if (isApiRoute) {
+    const identifier = apiKey || req.auth?.user?.id || "anonymous"
+    
+    // Rate Limiting
+    const { success } = await ratelimit.limit(identifier)
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
+    }
+
+    // If no session and no API key, unauthorized (except for public routes if any)
+    if (!isLoggedIn && !apiKey) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const res = NextResponse.next()
+    res.headers.set("x-request-id", requestId)
+    return res
+  }
+
+  // 3. Handle Dashboard Route Protection
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return Response.redirect(new URL("/dashboard", nextUrl))
+    }
+    return NextResponse.next()
+  }
+
+  if (isDashboardRoute && !isLoggedIn) {
+    return Response.redirect(new URL("/login", nextUrl))
+  }
+
+  if (isAdminRoute && userRole !== "ADMIN") {
+    return Response.redirect(new URL("/dashboard", nextUrl))
+  }
+
+  const res = NextResponse.next()
+  res.headers.set("x-request-id", requestId)
+  return res
+})
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)", "/api/:path*"],
+}

@@ -1,0 +1,27 @@
++-------------------------------------------------+
+|                SaaS Dashboard Status            |
++---------------------+---------------------------+
+| Project Name        | saas-dashboard            |
+| Version             | 0.1.0                     |
+| Framework           | Next.js 16.2.6            |
+| Language            | TypeScript                |
+| Styling             | Tailwind CSS v4 + shadcn|
+| State Management    | React Context (providers) |
+| Authentication      | NextAuth.js (Prisma adapter) |
+| Database            | Prisma ORM (Postgres?) |
+| Caching / RateLimit | Upstash Redis            |
+| Payments            | Stripe                  |
+| Email               | Resend                  |
+| Charts              | Recharts                |
+| Animations          | Framer Motion           |
+| Testing             | Vitest + Testing Library|
+| Linting             | ESLint (Next.js config) |
++---------------------+---------------------------+
+| File Structure      |                           |
+|  - src/app          | App Router pages & layouts|
+|  - src/components   | UI components, layout, org|
+|  - src/lib          | Utils, Prisma, Env, etc. |
+|  - src/services     | Business logic services  |
+|  - src/hooks        | Custom hooks             |
+|  - src/test         | Test files               |
++---------------------+---------------------------+
