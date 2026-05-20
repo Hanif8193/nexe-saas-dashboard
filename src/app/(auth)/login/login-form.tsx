@@ -48,10 +48,16 @@ export function LoginForm({ errorMsg }: { errorMsg: string | null }) {
           <p className="text-sm text-destructive">{errorMsg}</p>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-3">
         <Button className="w-full" type="submit">
           Sign In
         </Button>
+        <p className="text-sm text-muted-foreground text-center">
+          Don&apos;t have an account?{" "}
+          <a href="/register" className="underline hover:text-foreground">
+            Sign up
+          </a>
+        </p>
       </CardFooter>
     </form>
   )
